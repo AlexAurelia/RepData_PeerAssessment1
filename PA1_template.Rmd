@@ -8,18 +8,83 @@ output:
 
 ## Loading and preprocessing the data
 
-
+```{r setup, include=FALSE}
+require(data.table)
+unzip(zipfile="activity.zip")
+data <- as.data.table(read.csv("activity.csv"))
+```
 
 ## What is mean total number of steps taken per day?
 
+```{r setup, include=TRUE}
+library(ggplot2)
+sum.steps <- ddata[, sum(steps, na.rm = TRUE), by=date]
+setnames(sum.steps, "V1", "Daily.steps")
+hist(sum.steps[,Daily.steps], breaks = 50, xlab="Number of steps taken each day")
+mean(sum.steps[,Daily.steps], na.rm=TRUE)
+median(sum.steps[,Daily.steps], na.rm=TRUE)
+```
 
 
 ## What is the average daily activity pattern?
 
+```{r setup, include=TRUE}
+avg.steps.interval  <- data[, mean(steps, na.rm=TRUE), by=interval]
+setnames(avg.steps.interval, "V1", "Interval.steps")
+plot(avg.steps.interval[,interval] , avg.steps.interval[,Interval.steps], type='l', ylab="Average number of steps", xlab = "5-minute intervall" )
+avg.steps.interval[max(Interval.steps),interval]
+```
 
 
 ## Imputing missing values
 
+Total number of NA's in the dataset
 
+```{r setup, include=TRUE}
+nrow(data[is.na(steps),])
+```
+
+Replace the NA's with the average number of steps in that 5-minute intervall over all days. 
+
+```{r setup, include=TRUE}
+new.data <- merge(data, avg.steps.interval, by="interval", all.x=TRUE) 
+new.data[,steps:=as.numeric(steps)]
+new.data[is.na(steps), steps := Interval.steps]
+new.data[,Interval.steps:=NULL]
+```
+Histogram, mean and median with data with NA's replaced 
+
+```{r setup, include=TRUE}
+new.data <- merge(data, avg.steps.interval, by="interval", all.x=TRUE) 
+new.data[,steps:=as.numeric(steps)]
+new.data[is.na(steps), steps := Interval.steps]
+new.data[,Interval.steps:=NULL]
+```
+
+After replacing the NA values with mean number of steps in a 5-minute interval the mean and median increase.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+Adding two factos to the data. One factor indicating if the day is a weekday and one idicating a weekend.
+
+```{r setup, include=TRUE}
+data[, day := weekdays(as.Date(date))]
+data[, weekday := (day=="Monday"|day=="Tuesday"|day=="Wednesday"|day=="Thursday"|day=="Friday")*1]
+data[, weekend := (day=="Saturday"|day=="Sunday")*1]
+```
+
+Panel plot containing a time series plot of the 5-minute interval and the average number of steps taken.
+
+
+```{r setup, include=TRUE}
+par(mfcol=c(2,1))
+avg.steps.interval.weekday  <- data[weekday==1, mean(steps, na.rm=TRUE), by=interval]
+setnames(avg.steps.interval.weekday, "V1", "Interval.steps")
+plot(avg.steps.interval.weekday[,interval] , avg.steps.interval.weekday[,Interval.steps], type='l', ylab="Average number of steps", xlab = "5-minute intervall" , main = "Average Weekday")
+avg.steps.interval.weekday[max(Interval.steps),interval]
+
+avg.steps.interval.weekend  <- data[weekend==1, mean(steps, na.rm=TRUE), by=interval]
+setnames(avg.steps.interval.weekend, "V1", "Interval.steps")
+plot(avg.steps.interval.weekend[,interval] , avg.steps.interval.weekend[,Interval.steps], type='l', ylab="Average number of steps", xlab = "5-minute intervall" , main = "Average Weekend")
+avg.steps.interval.weekend[max(Interval.steps),interval]
+```
