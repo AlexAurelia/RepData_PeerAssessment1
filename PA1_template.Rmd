@@ -8,6 +8,9 @@ output:
 
 ## Loading and preprocessing the data
 
+require the package data.table 
+unzip and load the data 
+
 ```{r setup, include=FALSE}
 require(data.table)
 unzip(zipfile="activity.zip")
@@ -16,9 +19,11 @@ data <- as.data.table(read.csv("activity.csv"))
 
 ## What is mean total number of steps taken per day?
 
+Calculate the total number of steps per day. Then plot the histogramm and calculate the mean and median. 
+
 ```{r setup, include=TRUE}
 library(ggplot2)
-sum.steps <- ddata[, sum(steps, na.rm = TRUE), by=date]
+sum.steps <- data[, sum(steps, na.rm = TRUE), by=date]
 setnames(sum.steps, "V1", "Daily.steps")
 hist(sum.steps[,Daily.steps], breaks = 50, xlab="Number of steps taken each day")
 mean(sum.steps[,Daily.steps], na.rm=TRUE)
@@ -27,6 +32,10 @@ median(sum.steps[,Daily.steps], na.rm=TRUE)
 
 
 ## What is the average daily activity pattern?
+
+Calcualte the average number of steps in each 5-minute intervall over all days.
+Plot a time series graph showing the average number of steps taken in each 5-minute interval.   
+Find the 5-minute inteval with the highest average number of steps taken. 
 
 ```{r setup, include=TRUE}
 avg.steps.interval  <- data[, mean(steps, na.rm=TRUE), by=interval]
